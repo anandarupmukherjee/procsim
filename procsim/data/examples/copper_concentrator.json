@@ -1,0 +1,292 @@
+{
+ "name": "Copper concentrator with concentrate leach",
+ "description": "Closed-circuit ball mill with hydrocyclones, rougher-cleaner flotation, thickening and tank leaching of the concentrate.",
+ "components": [
+  "water"
+ ],
+ "minerals": [
+  "chalcopyrite",
+  "pyrite",
+  "quartz"
+ ],
+ "package": "Ideal",
+ "units": [
+  {
+   "id": "SUMP",
+   "type": "Mixer",
+   "x": 160,
+   "y": 220,
+   "params": {}
+  },
+  {
+   "id": "BM",
+   "type": "Comminution",
+   "x": 320,
+   "y": 220,
+   "params": {
+    "P80": 250.0,
+    "spread": 0.9
+   }
+  },
+  {
+   "id": "CYC",
+   "type": "Classifier",
+   "x": 480,
+   "y": 220,
+   "params": {
+    "d50c": 110.0,
+    "sharpness": 3.0,
+    "Rf": 0.3
+   }
+  },
+  {
+   "id": "ROUGH",
+   "type": "FlotationBank",
+   "x": 640,
+   "y": 320,
+   "params": {
+    "tau": 14.0,
+    "cells": 7,
+    "water_rec": 0.12
+   }
+  },
+  {
+   "id": "CLEAN",
+   "type": "FlotationBank",
+   "x": 800,
+   "y": 220,
+   "params": {
+    "tau": 10.0,
+    "cells": 5,
+    "water_rec": 0.35,
+    "entrainment": 0.3
+   }
+  },
+  {
+   "id": "TAILMIX",
+   "type": "Mixer",
+   "x": 960,
+   "y": 420,
+   "params": {}
+  },
+  {
+   "id": "THK1",
+   "type": "Thickener",
+   "x": 960,
+   "y": 160,
+   "params": {
+    "solids_rec": 0.995,
+    "uf_solids": 65.0
+   }
+  },
+  {
+   "id": "LEACH",
+   "type": "LeachTank",
+   "x": 1120,
+   "y": 160,
+   "params": {
+    "extraction": "chalcopyrite: 0.92\npyrite: 0.08",
+    "T": 85.0,
+    "tau": 360.0
+   }
+  },
+  {
+   "id": "CCD",
+   "type": "Thickener",
+   "x": 1280,
+   "y": 160,
+   "params": {
+    "solids_rec": 0.998,
+    "uf_solids": 55.0
+   }
+  }
+ ],
+ "streams": [
+  {
+   "id": "Ore",
+   "from": null,
+   "to": {
+    "unit": "SUMP",
+    "port": "in"
+   },
+   "feed": {
+    "T": 293.15,
+    "P": 101325.0,
+    "flows": {
+     "water": 0.0
+    },
+    "solids": {
+     "chalcopyrite": {
+      "mass": 0.5555555555555556,
+      "p80": 9000
+     },
+     "pyrite": {
+      "mass": 1.388888888888889,
+      "p80": 9000
+     },
+     "quartz": {
+      "mass": 25.833333333333336,
+      "p80": 12000
+     }
+    }
+   }
+  },
+  {
+   "id": "Mill water",
+   "from": null,
+   "to": {
+    "unit": "SUMP",
+    "port": "in"
+   },
+   "feed": {
+    "T": 293.15,
+    "P": 101325.0,
+    "flows": {
+     "water": 1541.924939093965
+    }
+   }
+  },
+  {
+   "id": "Mill feed",
+   "from": {
+    "unit": "SUMP",
+    "port": "out"
+   },
+   "to": {
+    "unit": "BM",
+    "port": "in"
+   }
+  },
+  {
+   "id": "Mill discharge",
+   "from": {
+    "unit": "BM",
+    "port": "out"
+   },
+   "to": {
+    "unit": "CYC",
+    "port": "in"
+   }
+  },
+  {
+   "id": "Cyclone underflow",
+   "from": {
+    "unit": "CYC",
+    "port": "coarse"
+   },
+   "to": {
+    "unit": "SUMP",
+    "port": "in"
+   }
+  },
+  {
+   "id": "Cyclone overflow",
+   "from": {
+    "unit": "CYC",
+    "port": "fine"
+   },
+   "to": {
+    "unit": "ROUGH",
+    "port": "in"
+   }
+  },
+  {
+   "id": "Rougher conc",
+   "from": {
+    "unit": "ROUGH",
+    "port": "concentrate"
+   },
+   "to": {
+    "unit": "CLEAN",
+    "port": "in"
+   }
+  },
+  {
+   "id": "Rougher tail",
+   "from": {
+    "unit": "ROUGH",
+    "port": "tailings"
+   },
+   "to": {
+    "unit": "TAILMIX",
+    "port": "in"
+   }
+  },
+  {
+   "id": "Cleaner tail",
+   "from": {
+    "unit": "CLEAN",
+    "port": "tailings"
+   },
+   "to": {
+    "unit": "TAILMIX",
+    "port": "in"
+   }
+  },
+  {
+   "id": "Final tailings",
+   "from": {
+    "unit": "TAILMIX",
+    "port": "out"
+   },
+   "to": null
+  },
+  {
+   "id": "Cleaner conc",
+   "from": {
+    "unit": "CLEAN",
+    "port": "concentrate"
+   },
+   "to": {
+    "unit": "THK1",
+    "port": "in"
+   }
+  },
+  {
+   "id": "Process water",
+   "from": {
+    "unit": "THK1",
+    "port": "overflow"
+   },
+   "to": null
+  },
+  {
+   "id": "Thickened conc",
+   "from": {
+    "unit": "THK1",
+    "port": "underflow"
+   },
+   "to": {
+    "unit": "LEACH",
+    "port": "in"
+   }
+  },
+  {
+   "id": "Leach discharge",
+   "from": {
+    "unit": "LEACH",
+    "port": "out"
+   },
+   "to": {
+    "unit": "CCD",
+    "port": "in"
+   }
+  },
+  {
+   "id": "Pregnant liquor",
+   "from": {
+    "unit": "CCD",
+    "port": "overflow"
+   },
+   "to": null
+  },
+  {
+   "id": "Leach residue",
+   "from": {
+    "unit": "CCD",
+    "port": "underflow"
+   },
+   "to": null
+  }
+ ]
+}

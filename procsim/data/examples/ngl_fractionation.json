@@ -1,0 +1,175 @@
+{
+ "name": "NGL recovery and fractionation",
+ "description": "Chill a rich gas, separate the condensate, then de-ethanise and de-propanise the liquids.",
+ "components": [
+  "nitrogen",
+  "carbon dioxide",
+  "methane",
+  "ethane",
+  "propane",
+  "n-butane",
+  "n-pentane",
+  "n-hexane"
+ ],
+ "package": "Peng-Robinson",
+ "units": [
+  {
+   "id": "E-100",
+   "type": "Heater",
+   "x": 200,
+   "y": 160,
+   "params": {
+    "mode": "temperature",
+    "T_out": -35.0,
+    "dP": 0.5
+   }
+  },
+  {
+   "id": "V-100",
+   "type": "Flash",
+   "x": 380,
+   "y": 160,
+   "params": {
+    "mode": "adiabatic",
+    "P": 59.5
+   }
+  },
+  {
+   "id": "V-101",
+   "type": "Valve",
+   "x": 540,
+   "y": 260,
+   "params": {
+    "P_out": 26.0
+   }
+  },
+  {
+   "id": "T-100",
+   "type": "ShortcutColumn",
+   "x": 700,
+   "y": 260,
+   "params": {
+    "LK": "ethane",
+    "HK": "propane",
+    "LK_rec": 0.98,
+    "HK_rec": 0.98,
+    "R_factor": 1.3,
+    "P": 26.0
+   }
+  },
+  {
+   "id": "T-101",
+   "type": "ShortcutColumn",
+   "x": 880,
+   "y": 360,
+   "params": {
+    "LK": "propane",
+    "HK": "n-butane",
+    "LK_rec": 0.98,
+    "HK_rec": 0.98,
+    "R_factor": 1.3,
+    "P": 15.0
+   }
+  }
+ ],
+ "streams": [
+  {
+   "id": "Rich gas",
+   "from": null,
+   "to": {
+    "unit": "E-100",
+    "port": "in"
+   },
+   "feed": {
+    "T": 303.15,
+    "P": 6000000.0,
+    "flows": {
+     "nitrogen": 1.0,
+     "carbon dioxide": 1.5,
+     "methane": 70.0,
+     "ethane": 12.0,
+     "propane": 8.0,
+     "n-butane": 4.0,
+     "n-pentane": 2.0,
+     "n-hexane": 1.5
+    }
+   }
+  },
+  {
+   "id": "Chilled gas",
+   "from": {
+    "unit": "E-100",
+    "port": "out"
+   },
+   "to": {
+    "unit": "V-100",
+    "port": "in"
+   }
+  },
+  {
+   "id": "Residue gas",
+   "from": {
+    "unit": "V-100",
+    "port": "vapour"
+   },
+   "to": null
+  },
+  {
+   "id": "Condensate",
+   "from": {
+    "unit": "V-100",
+    "port": "liquid"
+   },
+   "to": {
+    "unit": "V-101",
+    "port": "in"
+   }
+  },
+  {
+   "id": "Column feed",
+   "from": {
+    "unit": "V-101",
+    "port": "out"
+   },
+   "to": {
+    "unit": "T-100",
+    "port": "in"
+   }
+  },
+  {
+   "id": "Ethane overhead",
+   "from": {
+    "unit": "T-100",
+    "port": "distillate"
+   },
+   "to": null
+  },
+  {
+   "id": "C3+",
+   "from": {
+    "unit": "T-100",
+    "port": "bottoms"
+   },
+   "to": {
+    "unit": "T-101",
+    "port": "in"
+   }
+  },
+  {
+   "id": "LPG",
+   "from": {
+    "unit": "T-101",
+    "port": "distillate"
+   },
+   "to": null
+  },
+  {
+   "id": "Natural gasoline",
+   "from": {
+    "unit": "T-101",
+    "port": "bottoms"
+   },
+   "to": null
+  }
+ ]
+}

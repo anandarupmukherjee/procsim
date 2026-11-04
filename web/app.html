@@ -1,0 +1,720 @@
+<title>Procsim Flowsheet</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+/* Layout: drafting-table workspace. Title-block header, unit palette left, flowsheet sheet centre,
+   inspector right, stream table below. Stacks to one column on phones. */
+:root {
+  --paper: #f3f4ef;      /* page ground, faint green-grey drafting stock */
+  --sheet: #fbfbf8;      /* flowsheet surface */
+  --panel: #ffffff;
+  --ink: #1c2731;        /* text and equipment linework */
+  --ink-2: #4c5a66;      /* secondary text */
+  --rule: #cfd5d2;       /* hairlines */
+  --grid: #e6e9e3;
+  --accent: #1f5fa8;     /* process ink blue: selection, actions */
+  --accent-soft: #e2ecf7;
+  --copper: #b0612a;     /* feeds and minerals */
+  --ok: #2f7d4f; --warn: #a86c00; --bad: #b3312b;
+  --vapour: #6c7f8e;
+  --f-display: "Barlow Condensed", "Arial Narrow", sans-serif;
+  --f-body: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --f-mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --paper: #11161b; --sheet: #151b21; --panel: #1a2128; --ink: #dbe3e8; --ink-2: #98a6b1; --rule: #2c363f; --grid: #1d252c;
+  --accent: #6ea8ec; --accent-soft: #1d2c3d; --copper: #d98d55; --ok: #5fbf86; --warn: #e0a63a; --bad: #ef6b63; --vapour: #8ea0ad; color-scheme: dark; } }
+:root[data-theme="dark"] {
+  --paper: #11161b; --sheet: #151b21; --panel: #1a2128; --ink: #dbe3e8; --ink-2: #98a6b1; --rule: #2c363f; --grid: #1d252c;
+  --accent: #6ea8ec; --accent-soft: #1d2c3d; --copper: #d98d55; --ok: #5fbf86; --warn: #e0a63a; --bad: #ef6b63; --vapour: #8ea0ad; color-scheme: dark; }
+
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+html, body { height: 100%; }
+body { background: var(--paper); color: var(--ink); font-family: var(--f-body); font-size: 14px; line-height: 1.45; }
+button, input, select, textarea { font: inherit; color: inherit; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+.app { display: grid; grid-template-columns: 190px minmax(0, 1fr) 330px; grid-template-rows: auto minmax(420px, 1fr) auto;
+  grid-template-areas: "head head head" "pal sheet insp" "res res res"; min-height: 100%; }
+
+/* ---- title block */
+header { grid-area: head; display: flex; flex-wrap: wrap; align-items: stretch; border-bottom: 1.5px solid var(--ink); background: var(--panel); }
+.tb { display: flex; flex-direction: column; justify-content: center; padding: 8px 16px; border-right: 1px solid var(--rule); min-width: 0; }
+.tb small { font-family: var(--f-display); text-transform: uppercase; letter-spacing: .08em; font-size: 11px; color: var(--ink-2); }
+.brand { font-family: var(--f-display); font-weight: 700; font-size: 22px; letter-spacing: .02em; line-height: 1; }
+.tb input.fsname { border: 0; background: transparent; font-weight: 600; padding: 0; min-width: 0; width: 100%; }
+.tb select { border: 1px solid var(--rule); background: var(--panel); border-radius: 3px; padding: 2px 4px; }
+.tb.grow { flex: 1 1 220px; }
+.actions { display: flex; align-items: center; gap: 8px; padding: 8px 16px; flex-wrap: wrap; }
+.btn { border: 1px solid var(--rule); background: var(--panel); border-radius: 3px; padding: 6px 12px; cursor: pointer; }
+.btn:hover { border-color: var(--ink-2); }
+.btn.primary { background: var(--accent); border-color: var(--accent); color: var(--panel); font-weight: 600; }
+.btn.danger { color: var(--bad); }
+.btn.small { padding: 3px 8px; font-size: 12px; }
+.chk { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; color: var(--ink-2); }
+.status { font-family: var(--f-mono); font-size: 12px; padding: 4px 8px; border-radius: 3px; border: 1px solid var(--rule); max-width: 100%; }
+.status.ok { color: var(--ok); border-color: color-mix(in srgb, var(--ok) 40%, transparent); }
+.status.bad { color: var(--bad); border-color: color-mix(in srgb, var(--bad) 40%, transparent); }
+.status.warn { color: var(--warn); border-color: color-mix(in srgb, var(--warn) 40%, transparent); }
+
+/* ---- palette */
+.palette { grid-area: pal; border-right: 1px solid var(--rule); background: var(--panel); padding: 12px; overflow-y: auto; display: flex; flex-direction: column; gap: 14px; }
+.palette h3, .insp h3, .res h3 { font-family: var(--f-display); text-transform: uppercase; letter-spacing: .1em; font-size: 12px; font-weight: 600; color: var(--ink-2); margin: 0 0 6px; }
+.pal-group { display: flex; flex-direction: column; gap: 4px; }
+.pal-item { display: flex; align-items: center; gap: 8px; border: 1px solid transparent; background: none; text-align: left; padding: 4px 6px; border-radius: 3px; cursor: pointer; }
+.pal-item:hover { border-color: var(--rule); background: var(--accent-soft); }
+.pal-item svg { flex: none; }
+.hint { font-size: 12px; color: var(--ink-2); }
+
+/* ---- sheet */
+.sheet { grid-area: sheet; overflow: auto; background: var(--sheet); position: relative; min-width: 0; }
+.sheet svg { display: block; }
+.u-body { fill: var(--sheet); stroke: var(--ink); stroke-width: 1.6; }
+.u-line { fill: none; stroke: var(--ink); stroke-width: 1.3; }
+.u-fill { fill: var(--ink); }
+.unit { cursor: grab; touch-action: none; }
+.unit.sel .u-body { stroke: var(--accent); stroke-width: 2.4; }
+.unit.err .u-body { stroke: var(--bad); stroke-width: 2.4; }
+.u-tag { font-family: var(--f-display); font-weight: 600; font-size: 13px; fill: var(--ink); letter-spacing: .04em; }
+.u-sub { font-family: var(--f-mono); font-size: 10px; fill: var(--ink-2); }
+.port { fill: var(--sheet); stroke: var(--ink-2); stroke-width: 1.2; cursor: crosshair; }
+.port.in { fill: var(--sheet); }
+.port:hover, .port.armed { fill: var(--accent); stroke: var(--accent); }
+.port-hit { fill: transparent; cursor: crosshair; }
+.strm { fill: none; stroke: var(--ink); stroke-width: 1.4; }
+.strm.feed { stroke: var(--copper); }
+.strm.prod { stroke: var(--ink-2); stroke-dasharray: 5 4; }
+.strm.sel { stroke: var(--accent); stroke-width: 2.6; }
+.strm-hit { fill: none; stroke: transparent; stroke-width: 12; cursor: pointer; }
+.s-tag { font-family: var(--f-mono); font-size: 10.5px; fill: var(--ink-2); }
+.s-tag.feed { fill: var(--copper); }
+.s-box { fill: var(--sheet); }
+.arrow { fill: var(--ink); }
+.arrow.feed { fill: var(--copper); }
+.arrow.prod { fill: var(--ink-2); }
+.arrow.sel { fill: var(--accent); }
+.armed-note { position: sticky; left: 12px; top: 12px; display: inline-block; margin: 12px; padding: 6px 10px; background: var(--accent); color: var(--panel); border-radius: 3px; font-size: 12px; z-index: 2; }
+
+/* ---- inspector */
+.insp { grid-area: insp; border-left: 1px solid var(--rule); background: var(--panel); padding: 14px 16px; overflow-y: auto; min-width: 0; display: flex; flex-direction: column; gap: 14px; }
+.insp .title { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; }
+.insp .title input { font-family: var(--f-display); font-weight: 700; font-size: 22px; border: 0; border-bottom: 1px dashed var(--rule); background: transparent; width: 9ch; padding: 0; }
+.insp .title .type { font-family: var(--f-display); text-transform: uppercase; letter-spacing: .08em; color: var(--ink-2); font-size: 13px; }
+.desc { font-size: 12.5px; color: var(--ink-2); margin: 0; }
+.form { display: grid; grid-template-columns: minmax(0, 1fr) 112px 44px; gap: 6px 8px; align-items: center; }
+.form label { font-size: 13px; min-width: 0; }
+.form .u { font-family: var(--f-mono); font-size: 11px; color: var(--ink-2); }
+.form input, .form select { width: 100%; border: 1px solid var(--rule); border-radius: 3px; padding: 4px 6px; background: var(--sheet); font-family: var(--f-mono); font-size: 12.5px; }
+.form textarea { grid-column: 1 / -1; width: 100%; min-height: 96px; border: 1px solid var(--rule); border-radius: 3px; padding: 6px; background: var(--sheet); font-family: var(--f-mono); font-size: 12px; resize: vertical; }
+.form .full { grid-column: 1 / -1; }
+.form .sec { grid-column: 1 / -1; font-family: var(--f-display); text-transform: uppercase; letter-spacing: .1em; font-size: 11.5px; color: var(--ink-2); border-top: 1px solid var(--rule); padding-top: 8px; margin-top: 4px; }
+.kv { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 3px 12px; font-size: 13px; }
+.kv dt { color: var(--ink-2); min-width: 0; }
+.kv.src { grid-template-columns: 1fr; gap: 1px; font-size: 12px; }
+.kv.src dd { text-align: left; font-family: var(--f-body); margin-bottom: 6px; }
+.kv dd { margin: 0; font-family: var(--f-mono); font-variant-numeric: tabular-nums; text-align: right; }
+.checks { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 2px 10px; font-size: 13px; }
+.checks label { display: flex; gap: 6px; align-items: center; min-width: 0; }
+.checks .f { font-family: var(--f-mono); font-size: 11px; color: var(--ink-2); }
+.row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.errbox { border-left: 3px solid var(--bad); padding: 6px 10px; background: color-mix(in srgb, var(--bad) 8%, transparent); font-size: 13px; }
+
+/* ---- results */
+.res { grid-area: res; border-top: 1.5px solid var(--ink); background: var(--panel); min-width: 0; }
+.tabs { display: flex; gap: 0; border-bottom: 1px solid var(--rule); padding: 0 16px; overflow-x: auto; }
+.tab { border: 0; background: none; padding: 9px 14px; font-family: var(--f-display); text-transform: uppercase; letter-spacing: .08em; font-weight: 600; font-size: 13px; color: var(--ink-2); cursor: pointer; border-bottom: 2px solid transparent; white-space: nowrap; }
+.tab[aria-selected="true"] { color: var(--ink); border-bottom-color: var(--accent); }
+.pane { padding: 12px 16px 20px; }
+.tablewrap { overflow-x: auto; max-height: 420px; overflow-y: auto; border: 1px solid var(--rule); }
+table.st { border-collapse: collapse; font-size: 12.5px; font-variant-numeric: tabular-nums; }
+table.st th, table.st td { padding: 4px 10px; border-bottom: 1px solid var(--grid); white-space: nowrap; text-align: right; font-family: var(--f-mono); }
+table.st th { font-family: var(--f-body); font-weight: 600; position: sticky; top: 0; background: var(--panel); z-index: 1; cursor: pointer; }
+table.st th.sel, table.st td.sel { background: var(--accent-soft); }
+table.st td:first-child, table.st th:first-child { text-align: left; position: sticky; left: 0; background: var(--panel); font-family: var(--f-body); z-index: 2; }
+table.st tr.grp td { font-family: var(--f-display); text-transform: uppercase; letter-spacing: .08em; color: var(--ink-2); font-size: 11.5px; padding-top: 10px; }
+.cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 12px; }
+.card { border: 1px solid var(--rule); border-radius: 3px; padding: 10px 12px; }
+.card h4 { margin: 0 0 6px; font-family: var(--f-display); font-size: 16px; letter-spacing: .03em; display: flex; justify-content: space-between; gap: 8px; }
+.card h4 span { font-size: 12px; color: var(--ink-2); text-transform: uppercase; letter-spacing: .08em; }
+.bal { display: flex; flex-wrap: wrap; gap: 24px; margin-bottom: 14px; }
+.bal div { min-width: 140px; }
+.bal b { display: block; font-family: var(--f-mono); font-size: 18px; font-weight: 500; font-variant-numeric: tabular-nums; }
+.bal span { font-size: 12px; color: var(--ink-2); }
+pre.json { font-family: var(--f-mono); font-size: 11.5px; background: var(--sheet); border: 1px solid var(--rule); padding: 10px; max-height: 300px; overflow: auto; white-space: pre; }
+textarea.import { width: 100%; min-height: 120px; font-family: var(--f-mono); font-size: 12px; border: 1px solid var(--rule); background: var(--sheet); padding: 8px; }
+.chart text { font-family: var(--f-mono); font-size: 10px; fill: var(--ink-2); }
+.chart .ax { stroke: var(--rule); }
+.chart .gl { stroke: var(--grid); }
+.chart .ln { fill: none; stroke: var(--copper); stroke-width: 2; }
+
+@media (max-width: 980px) {
+  .app { grid-template-columns: minmax(0, 1fr); grid-template-rows: auto auto 62vh auto auto; grid-template-areas: "head" "pal" "sheet" "insp" "res"; }
+  .palette { border-right: 0; border-bottom: 1px solid var(--rule); flex-direction: row; overflow-x: auto; padding: 8px 12px; gap: 16px; }
+  .pal-group { flex-direction: row; }
+  .pal-group h3 { writing-mode: vertical-rl; transform: rotate(180deg); margin: 0; }
+  .palette .hint { display: none; }
+  .pal-item span { white-space: nowrap; }
+  .insp { border-left: 0; border-top: 1px solid var(--rule); }
+}
+@media (prefers-reduced-motion: no-preference) { .strm { transition: stroke .15s; } }
+</style>
+
+<div class="app" id="app">
+  <header>
+    <div class="tb"><small>Process simulator</small><div class="brand">PROCSIM</div></div>
+    <div class="tb grow"><small>Flowsheet</small><input class="fsname" id="fsname" aria-label="Flowsheet name"></div>
+    <div class="tb"><small>Example</small>
+      <select id="example" aria-label="Load example"><option value="">Load an example…</option></select></div>
+    <div class="tb"><small>Property package</small>
+      <select id="pkg" aria-label="Property package"><option>Peng-Robinson</option><option>Ideal</option></select></div>
+    <div class="actions">
+      <button class="btn primary" id="solve">Solve</button>
+      <label class="chk"><input type="checkbox" id="auto" checked> Auto-solve</label>
+      <span class="status" id="status" role="status">Not solved</span>
+    </div>
+  </header>
+
+  <nav class="palette" id="palette" aria-label="Unit operations"></nav>
+
+  <section class="sheet" id="sheet" aria-label="Flowsheet">
+    <div class="armed-note" id="armed" hidden></div>
+    <svg id="svg" xmlns="http://www.w3.org/2000/svg"></svg>
+  </section>
+
+  <aside class="insp" id="insp" aria-label="Inspector"></aside>
+
+  <section class="res" aria-label="Results">
+    <div class="tabs" role="tablist" id="tabs">
+      <button class="tab" role="tab" data-tab="streams" aria-selected="true">Stream table</button>
+      <button class="tab" role="tab" data-tab="units" aria-selected="false">Unit results</button>
+      <button class="tab" role="tab" data-tab="conv" aria-selected="false">Balances &amp; recycles</button>
+      <button class="tab" role="tab" data-tab="json" aria-selected="false">Import / export</button>
+    </div>
+    <div class="pane" id="pane"></div>
+  </section>
+</div>
+
+<script>/*ENGINE*/</script>
+<script>
+const EXAMPLES = /*EXAMPLES*/;
+const PS = window.ProcSim, CAT = PS.catalogue();
+const SCHEMA = Object.fromEntries(CAT.units.map((u) => [u.type, u]));
+const PREFIX = { SXCascade: "SX", Precipitator: "PR", Electrolysis: "EC", Mixer: "MIX", Splitter: "SPL", Heater: "E", Valve: "V", Flash: "D", ComponentSplitter: "X", ConversionReactor: "R",
+  ShortcutColumn: "T", Comminution: "ML", Classifier: "CY", FlotationBank: "FL", LeachTank: "LX", Thickener: "TK" };
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+const fmt = (v, d = 4) => {
+  if (v === null || v === undefined || Number.isNaN(v)) return "–";
+  if (typeof v !== "number") return esc(v);
+  if (v === 0) return "0";
+  const a = Math.abs(v);
+  if (a >= 1e6 || a < 1e-3) return v.toExponential(d - 1);
+  return v.toPrecision(d).replace(/\.?0+$/, (m) => (m.includes(".") ? "" : m));
+};
+
+// ------------------------------------------------------------- state
+let fs = null, results = null, sel = null, armed = null, tab = "streams", errUnit = null;
+const SVGNS = "http://www.w3.org/2000/svg";
+
+function editorize(spec) {
+  // Ensure every outlet port has a stream (unconnected = product).
+  const s = JSON.parse(JSON.stringify(spec));
+  s.units = s.units || []; s.streams = s.streams || []; s.components = s.components || []; s.minerals = s.minerals || [];
+  s.units.forEach((u, i) => { u.x = u.x ?? 160 + 160 * i; u.y = u.y ?? 200; u.params = u.params || {}; });
+  for (const u of s.units) for (const p of SCHEMA[u.type].outports)
+    if (!s.streams.some((st) => st.from && st.from.unit === u.id && st.from.port === p))
+      s.streams.push({ id: newStreamId(s), from: { unit: u.id, port: p }, to: null });
+  return s;
+}
+function soluteList() {
+  const set = new Set(fs.components.filter((c) => CAT.solutes.includes(c)));
+  for (const m of fs.minerals) { const mm = CAT.minerals.find((x) => x.name === m); if (mm) Object.keys(mm.leach || {}).forEach((k) => set.add(k)); }
+  return [...set];
+}
+function newStreamId(s) { let i = 1; while (s.streams.some((st) => st.id === "S" + i)) i++; return "S" + i; }
+function newUnitId(type) { const p = PREFIX[type] || "U"; let i = 100; while (fs.units.some((u) => u.id === `${p}-${i}`)) i++; return `${p}-${i}`; }
+function save() { try { localStorage.setItem("procsim.flowsheet.v2", JSON.stringify(fs)); } catch (e) {} }
+function load(spec) { fs = editorize(spec); sel = null; armed = null; results = null; errUnit = null; renderAll(); solveSoon(0); }
+
+let skipped = [];
+function specForSolve(prune = true) {
+  const comps = new Set(fs.components);
+  const s = JSON.parse(JSON.stringify(fs));
+  skipped = [];
+  if (prune) {
+    // Leave out units that have nothing feeding them yet (and anything only they feed).
+    for (;;) {
+      const fed = new Set(s.streams.filter((st) => st.to).map((st) => st.to.unit));
+      const dead = s.units.filter((u) => !fed.has(u.id)).map((u) => u.id);
+      if (!dead.length) break;
+      skipped.push(...dead);
+      s.units = s.units.filter((u) => !dead.includes(u.id));
+      s.streams = s.streams.filter((st) => !(st.from && dead.includes(st.from.unit)) && !(!st.from && st.to && dead.includes(st.to.unit)));
+    }
+  }
+  s.streams.forEach((st) => {
+    if (st.feed) {
+      st.feed.flows = Object.fromEntries(Object.entries(st.feed.flows || {}).filter(([k]) => comps.has(k)));
+      st.feed.solids = Object.fromEntries(Object.entries(st.feed.solids || {}).filter(([k]) => fs.minerals.includes(k)));
+    }
+  });
+  return s;
+}
+
+// ------------------------------------------------------------- solving
+let timer = null;
+function solveSoon(ms = 350) { save(); if (!$("auto").checked && ms) return; clearTimeout(timer); timer = setTimeout(solveNow, ms); }
+function solveNow() {
+  const st = $("status");
+  if (!fs.units.length) { results = null; st.className = "status"; st.textContent = "Add a unit to begin"; renderResults(); return; }
+  const spec = specForSolve();
+  errUnit = null;
+  if (!spec.units.length) { results = null; st.className = "status warn"; st.textContent = "Add a feed to a unit inlet (click its square port)"; drawSheet(); renderInspector(); renderResults(); return; }
+  const r = PS.solve(spec);
+  if (!r.ok) {
+    results = null; errUnit = r.unit; st.className = "status bad"; st.textContent = r.error;
+  } else {
+    results = r;
+    const it = r.loops.reduce((a, l) => a + l.iterations, 0);
+    const warn = r.warnings.length;
+    st.className = "status " + (warn ? "warn" : "ok");
+    const skip = skipped.length ? ` · not yet connected: ${skipped.join(", ")}` : "";
+    st.textContent = warn ? r.warnings[0] : `Solved in ${(r.elapsed_s * 1000).toFixed(0)} ms` + (r.loops.length ? ` · ${r.loops.length} recycle loop${r.loops.length > 1 ? "s" : ""}, ${it} iterations` : "") + skip;
+  }
+  drawSheet(); renderInspector(); renderResults();
+}
+
+// ------------------------------------------------------------- glyphs
+// Each glyph: width, height, draw(g), and optional port y-fractions.
+const GLYPH = {
+  Mixer: { w: 44, h: 44, d: (w, h) => `<circle class="u-body" cx="${w/2}" cy="${h/2}" r="20"/><path class="u-line" d="M${w/2-9} ${h/2}h18M${w/2} ${h/2-9}v18"/>` },
+  Splitter: { w: 46, h: 46, d: (w, h) => `<path class="u-body" d="M${w/2} 1L${w-1} ${h/2}L${w/2} ${h-1}L1 ${h/2}Z"/><path class="u-line" d="M${w/2-8} ${h/2}h16"/>` },
+  Heater: { w: 48, h: 48, d: (w, h) => `<circle class="u-body" cx="24" cy="24" r="22"/><path class="u-line" d="M2 24h8l5-10 8 20 8-20 5 10h10"/>` },
+  Valve: { w: 46, h: 30, d: (w, h) => `<path class="u-body" d="M1 3L45 27V3L1 27Z"/><path class="u-line" d="M23 15V1M16 1h14"/>` },
+  Flash: { w: 46, h: 96, d: (w, h) => `<rect class="u-body" x="1" y="1" width="44" height="94" rx="22"/><path class="u-line" d="M6 58h34" stroke-dasharray="3 3"/>`, out: [0.12, 0.88] },
+  ComponentSplitter: { w: 56, h: 56, d: (w, h) => `<rect class="u-body" x="1" y="1" width="54" height="54"/><path class="u-line" d="M1 55L55 1"/>`, out: [0.25, 0.75] },
+  ConversionReactor: { w: 52, h: 96, d: (w, h) => `<rect class="u-body" x="1" y="1" width="50" height="94" rx="16"/><path class="u-line" d="M1 28h50M1 68h50M1 28l50 40M51 28L1 68"/>` },
+  ShortcutColumn: { w: 40, h: 150, d: (w, h) => `<rect class="u-body" x="1" y="1" width="38" height="148" rx="19"/>` +
+    Array.from({ length: 9 }, (_, i) => `<path class="u-line" d="M${i % 2 ? 1 : 10} ${26 + i * 12}h29"/>`).join(""), out: [0.06, 0.94] },
+  Comminution: { w: 88, h: 50, d: (w, h) => `<rect class="u-body" x="8" y="4" width="72" height="42" rx="6"/><path class="u-line" d="M1 18h7M1 32h7M80 25h7"/><circle class="u-line" cx="30" cy="30" r="6"/><circle class="u-line" cx="46" cy="22" r="6"/><circle class="u-line" cx="60" cy="31" r="6"/>` },
+  Classifier: { w: 50, h: 90, d: (w, h) => `<path class="u-body" d="M3 2h44v24L29 86h-8L3 26Z"/><path class="u-line" d="M18 2v-0M3 26h44M19 12h12"/>`, out: [0.95, 0.06] },
+  FlotationBank: { w: 92, h: 56, d: (w, h) => `<rect class="u-body" x="1" y="8" width="90" height="47"/><path class="u-line" d="M31 8v47M61 8v47M1 8l-0 0M6 2h80"/>` +
+    [[14,30],[21,42],[44,26],[52,40],[74,30],[80,44],[16,18],[48,16],[76,18]].map(([x,y]) => `<circle class="u-line" cx="${x}" cy="${y}" r="3"/>`).join(""), out: [0.1, 0.85] },
+  SXCascade: { w: 104, h: 50, d: (w, h) => `<rect class="u-body" x="1" y="8" width="102" height="40"/>` +
+    Array.from({ length: 7 }, (_, i) => `<path class="u-line" d="M${14 + i * 13} 8v40"/><rect class="u-line" x="${4 + i * 13}" y="1" width="7" height="7"/>`).join("") +
+    `<path class="u-line" d="M1 30h102" stroke-dasharray="3 3"/>`, out: [0.3, 0.8] },
+  Precipitator: { w: 58, h: 76, d: (w, h) => `<path class="u-body" d="M3 8h52v40L33 74h-8L3 48Z"/><path class="u-line" d="M29 1v40M21 41h16M3 20h4M51 20h4"/>`, out: [0.92, 0.3] },
+  Electrolysis: { w: 76, h: 58, d: (w, h) => `<rect class="u-body" x="1" y="10" width="74" height="47"/><path class="u-line" d="M22 1v40M54 1v40M1 30h74"/><path class="u-line" d="M5 45h66" stroke-dasharray="2 3"/><text x="38" y="8" text-anchor="middle" class="u-sub">+  −</text>`, out: [0.88, 0.12] },
+  LeachTank: { w: 60, h: 72, d: (w, h) => `<path class="u-body" d="M4 10h52v58H4Z"/><path class="u-line" d="M30 1v52M20 53h20M20 49l10 4 10-4"/><path class="u-line" d="M4 22h4M52 22h4" />` },
+  Thickener: { w: 104, h: 52, d: (w, h) => `<path class="u-body" d="M2 4h100v24L58 48H46L2 28Z"/><path class="u-line" d="M52 0v38M30 16h44"/>`, out: [0.1, 0.92] },
+};
+function portPos(u, kind, port) {
+  const g = GLYPH[u.type], sc = SCHEMA[u.type], list = kind === "in" ? sc.inports : sc.outports, i = list.indexOf(port);
+  const fr = kind === "out" && g.out ? g.out[i] : (i + 1) / (list.length + 1);
+  return { x: u.x + (kind === "in" ? 0 : g.w), y: u.y + g.h * fr };
+}
+
+// ------------------------------------------------------------- sheet
+function drawSheet() {
+  const svg = $("svg");
+  let W = 1100, H = 560;
+  for (const u of fs.units) { W = Math.max(W, u.x + GLYPH[u.type].w + 220); H = Math.max(H, u.y + GLYPH[u.type].h + 120); }
+  svg.setAttribute("width", W); svg.setAttribute("height", H); svg.setAttribute("viewBox", `0 0 ${W} ${H}`);
+  const byId = Object.fromEntries(fs.units.map((u) => [u.id, u]));
+  let html = `<defs><pattern id="grid" width="20" height="20" patternUnits="userSpaceOnUse"><path d="M20 0H0V20" fill="none" stroke="var(--grid)" stroke-width="1"/></pattern></defs>
+    <rect width="${W}" height="${H}" fill="url(#grid)" data-bg="1"/>`;
+  // streams
+  const lines = [], tags = [];
+  for (const st of fs.streams) {
+    const isSel = sel && sel.kind === "stream" && sel.id === st.id;
+    let pts, cls = "", lab;
+    if (!st.from && st.to) {
+      const b = portPos(byId[st.to.unit], "in", st.to.port);
+      pts = [[b.x - 96, b.y], [b.x - 6, b.y]]; cls = "feed"; lab = [b.x - 96, b.y - 6, "start"];
+    } else if (st.from && !st.to) {
+      const a = portPos(byId[st.from.unit], "out", st.from.port);
+      pts = [[a.x + 4, a.y], [a.x + 70, a.y]]; cls = "prod"; lab = [a.x + 74, a.y + 3.5, "start"];
+    } else if (st.from && st.to) {
+      const ua = byId[st.from.unit], ub = byId[st.to.unit], a = portPos(ua, "out", st.from.port), b = portPos(ub, "in", st.to.port);
+      if (b.x > a.x + 30) {
+        const mx = Math.round((a.x + b.x) / 2);
+        pts = [[a.x + 4, a.y], [mx, a.y], [mx, b.y], [b.x - 6, b.y]];
+      } else {
+        const low = Math.max(ua.y + GLYPH[ua.type].h, ub.y + GLYPH[ub.type].h) + 34;
+        pts = [[a.x + 4, a.y], [a.x + 20, a.y], [a.x + 20, low], [b.x - 24, low], [b.x - 24, b.y], [b.x - 6, b.y]];
+      }
+      const m = Math.floor((pts.length - 1) / 2), p = pts[m], q = pts[m + 1];
+      lab = [(p[0] + q[0]) / 2, (p[1] + q[1]) / 2 - 5, "middle"];
+    } else continue;
+    const d = "M" + pts.map((p) => p.join(" ")).join("L");
+    const last = pts[pts.length - 1], prev = pts[pts.length - 2], dir = Math.sign(last[0] - prev[0]) || 1;
+    const ax = cls === "prod" ? last[0] : last[0];
+    const arrow = `<path class="arrow ${cls} ${isSel ? "sel" : ""}" d="M${ax} ${last[1]}l${-8 * dir} -4.5v9Z"/>`;
+    lines.push(`<g data-stream="${esc(st.id)}"><path class="strm ${cls} ${isSel ? "sel" : ""}" d="${d}"/>${arrow}<path class="strm-hit" d="${d}"/></g>`);
+    const r = results && results.streams[st.id];
+    const sub = r ? `${fmt(r.T_C, 3)} °C · ${fmt(r.mass_flow_kg_s, 3)} kg/s` : "";
+    tags.push(`<g data-stream="${esc(st.id)}" style="cursor:pointer"><text class="s-tag ${cls}" x="${lab[0]}" y="${lab[1]}" text-anchor="${lab[2]}">${esc(st.id)}</text>` +
+      (sub && cls !== "" ? `<text class="s-tag" x="${lab[0]}" y="${lab[1] + 12}" text-anchor="${lab[2]}" opacity=".8">${esc(sub)}</text>` : "") + `</g>`);
+  }
+  html += lines.join("") + tags.join("");
+  // units
+  for (const u of fs.units) {
+    const g = GLYPH[u.type], sc = SCHEMA[u.type], isSel = sel && sel.kind === "unit" && sel.id === u.id;
+    let s = `<g class="unit ${isSel ? "sel" : ""} ${errUnit === u.id ? "err" : ""}" data-unit="${esc(u.id)}" transform="translate(${u.x} ${u.y})">${g.d(g.w, g.h)}`;
+    s += `<text class="u-tag" x="${g.w / 2}" y="${g.h + 15}" text-anchor="middle">${esc(u.id)}</text>`;
+    s += `<text class="u-sub" x="${g.w / 2}" y="${g.h + 27}" text-anchor="middle">${esc(sc.label)}</text></g>`;
+    for (const p of sc.inports) {
+      const pp = portPos(u, "in", p);
+      s += `<g data-port="in" data-u="${esc(u.id)}" data-p="${p}"><circle class="port-hit" cx="${pp.x}" cy="${pp.y}" r="11"/><rect class="port in" x="${pp.x - 4}" y="${pp.y - 4}" width="8" height="8"><title>${u.id} inlet: ${p}</title></rect></g>`;
+    }
+    for (const p of sc.outports) {
+      const pp = portPos(u, "out", p), on = armed && armed.unit === u.id && armed.port === p;
+      s += `<g data-port="out" data-u="${esc(u.id)}" data-p="${p}"><circle class="port-hit" cx="${pp.x}" cy="${pp.y}" r="11"/><circle class="port ${on ? "armed" : ""}" cx="${pp.x}" cy="${pp.y}" r="4.5"><title>${u.id} outlet: ${p}</title></circle></g>`;
+    }
+    html += s;
+  }
+  svg.innerHTML = html;
+  const note = $("armed");
+  note.hidden = !armed;
+  if (armed) note.textContent = `Connecting ${armed.unit} · ${armed.port}: click an inlet port (square), or press Esc`;
+}
+
+// pointer handling on the sheet
+let drag = null;
+$("svg").addEventListener("pointerdown", (e) => {
+  const port = e.target.closest("[data-port]"), unit = e.target.closest("[data-unit]"), strm = e.target.closest("[data-stream]");
+  if (port) {
+    e.preventDefault();
+    const uid = port.dataset.u, p = port.dataset.p;
+    if (port.dataset.port === "out") { armed = armed && armed.unit === uid && armed.port === p ? null : { unit: uid, port: p }; drawSheet(); return; }
+    if (armed) { connect(armed, { unit: uid, port: p }); armed = null; return; }
+    addFeed(uid, p); return;
+  }
+  if (unit) {
+    const u = fs.units.find((x) => x.id === unit.dataset.unit);
+    drag = { u, sx: e.clientX, sy: e.clientY, ox: u.x, oy: u.y, moved: false, id: e.pointerId };
+    try { $("svg").setPointerCapture(e.pointerId); } catch (err) {}
+    return;
+  }
+  if (strm) { select({ kind: "stream", id: strm.dataset.stream }); return; }
+  if (armed) { armed = null; drawSheet(); return; }
+  select(null);
+});
+$("svg").addEventListener("pointermove", (e) => {
+  if (!drag || e.pointerId !== drag.id) return;
+  const dx = e.clientX - drag.sx, dy = e.clientY - drag.sy;
+  if (!drag.moved && Math.hypot(dx, dy) < 4) return;
+  drag.moved = true;
+  drag.u.x = Math.max(110, Math.round((drag.ox + dx) / 10) * 10); drag.u.y = Math.max(20, Math.round((drag.oy + dy) / 10) * 10);
+  drawSheet();
+});
+$("svg").addEventListener("pointerup", (e) => {
+  if (!drag || e.pointerId !== drag.id) return;
+  const d = drag; drag = null;
+  if (!d.moved) select({ kind: "unit", id: d.u.id }); else { save(); drawSheet(); }
+});
+document.addEventListener("keydown", (e) => {
+  if (e.key === "Escape" && armed) { armed = null; drawSheet(); }
+  if ((e.key === "Delete" || e.key === "Backspace") && sel && !/INPUT|TEXTAREA|SELECT/.test(document.activeElement.tagName)) { e.preventDefault(); removeSelected(); }
+});
+
+// ------------------------------------------------------------- edits
+function select(s) { sel = s; drawSheet(); renderInspector(); renderResults(); }
+function addUnit(type) {
+  const sheet = $("sheet"), g = GLYPH[type];
+  const x = Math.round((sheet.scrollLeft + Math.min(sheet.clientWidth, 900) / 2 - g.w / 2) / 10) * 10;
+  const y = Math.round((sheet.scrollTop + sheet.clientHeight / 2 - g.h / 2) / 10) * 10;
+  const id = newUnitId(type);
+  const params = Object.fromEntries(SCHEMA[type].params.map((p) => [p.name, p.default]));
+  if (type === "ShortcutColumn") { const v = fs.components.filter((c) => !CAT.solutes.includes(c)); params.LK = v[0] || ""; params.HK = v[1] || ""; }
+  fs.units.push({ id, type, x: Math.max(120, x + (fs.units.length % 4) * 20), y: Math.max(30, y), params });
+  for (const p of SCHEMA[type].outports) fs.streams.push({ id: newStreamId(fs), from: { unit: id, port: p }, to: null });
+  sel = { kind: "unit", id }; drawSheet(); renderInspector(); solveSoon();
+}
+function connect(from, to) {
+  if (from.unit === to.unit && !confirmSelfLoop()) return;
+  const st = fs.streams.find((s) => s.from && s.from.unit === from.unit && s.from.port === from.port);
+  st.to = { unit: to.unit, port: to.port };
+  sel = { kind: "stream", id: st.id }; drawSheet(); renderInspector(); solveSoon();
+}
+function confirmSelfLoop() { return true; }
+function addFeed(uid, port) {
+  const id = newStreamId(fs), flows = {};
+  fs.components.filter((c) => !CAT.solutes.includes(c)).forEach((c, i) => (flows[c] = i === 0 ? 10 : 0));
+  fs.streams.push({ id, from: null, to: { unit: uid, port }, feed: { T: 298.15, P: 101325, flows, solids: {} } });
+  sel = { kind: "stream", id }; drawSheet(); renderInspector(); solveSoon();
+}
+function removeSelected() {
+  if (!sel) return;
+  if (sel.kind === "unit") {
+    const id = sel.id;
+    fs.units = fs.units.filter((u) => u.id !== id);
+    fs.streams = fs.streams.filter((s) => !(s.from && s.from.unit === id) && !(!s.from && s.to && s.to.unit === id));
+    fs.streams.forEach((s) => { if (s.to && s.to.unit === id) s.to = null; });
+  } else {
+    const st = fs.streams.find((s) => s.id === sel.id);
+    if (!st.from) fs.streams = fs.streams.filter((s) => s !== st); else st.to = null;
+  }
+  sel = null; drawSheet(); renderInspector(); solveSoon();
+}
+
+// ------------------------------------------------------------- palette
+function renderPalette() {
+  const groups = {};
+  for (const u of CAT.units) (groups[u.category] = groups[u.category] || []).push(u);
+  let h = "";
+  for (const [g, list] of Object.entries(groups)) {
+    h += `<div class="pal-group"><h3>${{ Fluid: "Chemical", Minerals: "Mineral processing", Hydrometallurgy: "Hydrometallurgy and refining" }[g] || g}</h3>`;
+    for (const u of list) {
+      const gl = GLYPH[u.type], sc = Math.min(26 / gl.w, 26 / gl.h);
+      h += `<button class="pal-item" data-add="${u.type}" title="${esc(u.description)}"><svg width="28" height="28" viewBox="${-(28 / sc - gl.w) / 2} ${-(28 / sc - gl.h) / 2} ${28 / sc} ${28 / sc}">${gl.d(gl.w, gl.h)}</svg><span>${esc(u.label)}</span></button>`;
+    }
+    h += `</div>`;
+  }
+  h += `<p class="hint">Click a unit to place it. Drag to move. Click a round outlet then a square inlet to connect. Click an empty inlet to add a feed.</p>`;
+  $("palette").innerHTML = h;
+}
+$("palette").addEventListener("click", (e) => { const b = e.target.closest("[data-add]"); if (b) addUnit(b.dataset.add); });
+
+// ------------------------------------------------------------- inspector
+function paramVisible(p, params) { return !p.when || Object.entries(p.when).every(([k, v]) => params[k] === v); }
+function renderInspector() {
+  const el = $("insp");
+  if (!sel) return (el.innerHTML = inspectFlowsheet());
+  if (sel.kind === "unit") {
+    const u = fs.units.find((x) => x.id === sel.id); if (!u) { sel = null; return renderInspector(); }
+    el.innerHTML = inspectUnit(u);
+  } else {
+    const st = fs.streams.find((x) => x.id === sel.id); if (!st) { sel = null; return renderInspector(); }
+    el.innerHTML = inspectStream(st);
+  }
+}
+function inspectFlowsheet() {
+  const vol = CAT.components, mins = CAT.minerals;
+  const src = fs.sources && Object.keys(fs.sources).length
+    ? `<div><h3>Sources</h3><dl class="kv src">${Object.entries(fs.sources).map(([k, v]) => `<dt>${esc(k)}</dt><dd>${esc(v)}</dd>`).join("")}</dl></div>` : "";
+  return `<div><h3>Flowsheet</h3><p class="desc">${esc(fs.description || "Choose the species this flowsheet carries, then place units on the sheet.")}</p></div>${src}
+  <div><h3>Components</h3><div class="checks">${vol.map((c) => `<label><input type="checkbox" data-comp="${esc(c.name)}" ${fs.components.includes(c.name) ? "checked" : ""}> ${esc(c.name)} <span class="f">${esc(c.formula)}</span></label>`).join("")}</div></div>
+  <div><h3>Dissolved species and reagents</h3><div class="checks">${CAT.solutes.map((c) => `<label><input type="checkbox" data-comp="${esc(c)}" ${fs.components.includes(c) ? "checked" : ""}> ${esc(c)}</label>`).join("")}</div>
+  <p class="hint">Ions released by leaching are added automatically. Tick 'reagent' to feed precipitants.</p></div>
+  <div><h3>Minerals (solids)</h3><div class="checks">${mins.map((m) => `<label><input type="checkbox" data-min="${esc(m.name)}" ${fs.minerals.includes(m.name) ? "checked" : ""}> ${esc(m.name)} <span class="f">${esc(m.formula)}</span></label>`).join("")}</div>
+  <p class="hint">Selecting minerals adds their dissolved metal ions automatically, for leaching.</p></div>
+  <div class="row"><button class="btn small" id="newfs">New empty flowsheet</button></div>`;
+}
+function paramInput(u, p) {
+  const id = `p-${u.id}-${p.name}`, v = u.params[p.name] ?? "";
+  if (p.kind === "select") return `<select id="${id}" data-param="${p.name}">${p.options.map((o) => `<option ${o === v ? "selected" : ""}>${esc(o)}</option>`).join("")}</select>`;
+  if (p.kind === "solute") {
+    const opts = soluteList();
+    return `<select id="${id}" data-param="${p.name}">${opts.map((o) => `<option ${o === v ? "selected" : ""} value="${esc(o)}">${esc(o)}</option>`).join("")}</select>`;
+  }
+  if (p.kind === "component") {
+    const opts = fs.components.filter((c) => !CAT.solutes.includes(c));
+    return `<select id="${id}" data-param="${p.name}">${["", ...opts].map((o) => `<option ${o === v ? "selected" : ""} value="${esc(o)}">${esc(o || "—")}</option>`).join("")}</select>`;
+  }
+  return `<input id="${id}" data-param="${p.name}" inputmode="decimal" value="${esc(v)}">`;
+}
+function inspectUnit(u) {
+  const sc = SCHEMA[u.type];
+  let f = "";
+  for (const p of sc.params) {
+    if (!paramVisible(p, u.params)) continue;
+    if (p.kind === "text") f += `<label class="full" for="p-${u.id}-${p.name}">${esc(p.help)}</label><textarea id="p-${u.id}-${p.name}" data-param="${p.name}" spellcheck="false">${esc(u.params[p.name] ?? "")}</textarea>`;
+    else f += `<label for="p-${u.id}-${p.name}" title="${esc(p.help)}">${esc(p.help)}</label>${paramInput(u, p)}<span class="u">${esc(p.units === "C" ? "°C" : p.units === "um" ? "µm" : p.units)}</span>`;
+  }
+  const r = results && results.units[u.id];
+  const res = r ? `<div><h3>Results</h3><dl class="kv">${Object.entries(r.results).map(([k, v]) => `<dt>${esc(k)}</dt><dd>${fmt(v)}</dd>`).join("")}</dl></div>`
+    : errUnit === u.id ? `<div class="errbox">${esc($("status").textContent)}</div>` : "";
+  return `<div class="title"><input id="uid" value="${esc(u.id)}" aria-label="Unit tag"><span class="type">${esc(sc.label)}</span></div>
+    <p class="desc">${esc(sc.description)}</p>
+    <div class="form" id="uform">${f}</div>${res}
+    <div class="row"><button class="btn small danger" id="del">Delete unit</button></div>`;
+}
+function inspectStream(st) {
+  const r = results && results.streams[st.id];
+  let h = `<div class="title"><input id="sid" value="${esc(st.id)}" aria-label="Stream name"><span class="type">${st.from ? (st.to ? "Internal stream" : "Product") : "Feed"}</span></div>`;
+  h += `<p class="desc">${st.from ? `From ${esc(st.from.unit)} (${esc(st.from.port)})` : "Process feed"}${st.to ? ` to ${esc(st.to.unit)} (${esc(st.to.port)})` : ""}</p>`;
+  if (!st.from) {
+    const fd = st.feed;
+    let f = `<label for="fT">Temperature</label><input id="fT" data-feed="T" value="${fmt(fd.T - 273.15, 6)}"><span class="u">°C</span>
+      <label for="fP">Pressure</label><input id="fP" data-feed="P" value="${fmt(fd.P / 1e5, 6)}"><span class="u">bar</span>
+      <div class="sec">Component flows</div>`;
+    for (const c of fs.components)
+      f += `<label for="fc-${esc(c)}">${esc(c)}</label><input id="fc-${esc(c)}" data-flow="${esc(c)}" inputmode="decimal" value="${fmt((fd.flows || {})[c] || 0, 6)}"><span class="u">mol/s</span>`;
+    if (fs.minerals.length) {
+      f += `<div class="sec">Solids</div>`;
+      for (const m of fs.minerals) {
+        const s = (fd.solids || {})[m] || {};
+        f += `<label for="fm-${esc(m)}">${esc(m)}</label><input id="fm-${esc(m)}" data-solid="${esc(m)}" data-k="mass" value="${fmt((s.mass || 0) * 3.6, 6)}"><span class="u">t/h</span>`;
+        f += `<label for="fp-${esc(m)}">&nbsp;&nbsp;P80</label><input id="fp-${esc(m)}" data-solid="${esc(m)}" data-k="p80" value="${fmt(s.p80 ?? 10000, 6)}"><span class="u">µm</span>`;
+      }
+    }
+    h += `<div class="form" id="sform">${f}</div>`;
+  }
+  if (r) {
+    h += `<div><h3>Conditions</h3><dl class="kv">
+      <dt>Temperature</dt><dd>${fmt(r.T_C)} °C</dd><dt>Pressure</dt><dd>${fmt(r.P_bar)} bar</dd>
+      <dt>Vapour fraction</dt><dd>${fmt(r.vapour_fraction, 3)}</dd><dt>Molar flow</dt><dd>${fmt(r.molar_flow_mol_s)} mol/s</dd>
+      <dt>Mass flow</dt><dd>${fmt(r.mass_flow_kg_s)} kg/s</dd><dt>Enthalpy</dt><dd>${fmt(r.enthalpy_kW)} kW</dd>
+      ${r.solids_total_kg_s !== undefined ? `<dt>Solids</dt><dd>${fmt(r.solids_total_kg_s * 3.6)} t/h</dd><dt>Solids content</dt><dd>${fmt(r.solids_pct_w, 3)} % w</dd><dt>P80</dt><dd>${r.P80_um ? fmt(r.P80_um, 3) + " µm" : "–"}</dd>` : ""}
+    </dl></div>`;
+    const comp = Object.entries(r.flows_mol_s).filter(([, v]) => v > 1e-12);
+    if (comp.length) h += `<div><h3>Composition</h3><dl class="kv">${comp.map(([k, v]) => `<dt>${esc(k)}</dt><dd>${fmt(v)} mol/s · ${fmt(100 * r.mole_fractions[k], 3)} %</dd>`).join("")}</dl></div>`;
+    if (r.psd_passing) h += `<div><h3>Size distribution (cumulative passing)</h3>${psdChart(r.psd_passing)}</div>`;
+  }
+  if (st.from && st.to) h += `<div class="row"><button class="btn small" id="del">Disconnect</button></div>`;
+  if (!st.from) h += `<div class="row"><button class="btn small danger" id="del">Delete feed</button></div>`;
+  return h;
+}
+function psdChart(pas) {
+  const W = 290, H = 170, L = 34, B = 26, T = 8, Rr = 8;
+  const xs = PS.SIEVES, lx = (d) => L + (Math.log10(d) - 1) / (Math.log10(1e5) - 1) * (W - L - Rr), ly = (p) => T + (1 - p) * (H - T - B);
+  let s = `<svg class="chart" viewBox="0 0 ${W} ${H}" width="100%" role="img" aria-label="Cumulative percent passing against particle size">`;
+  for (const p of [0, 0.2, 0.4, 0.6, 0.8, 1]) s += `<line class="gl" x1="${L}" x2="${W - Rr}" y1="${ly(p)}" y2="${ly(p)}"/><text x="${L - 4}" y="${ly(p) + 3}" text-anchor="end">${p * 100}</text>`;
+  for (const d of [10, 100, 1000, 10000, 100000]) s += `<line class="gl" y1="${T}" y2="${H - B}" x1="${lx(d)}" x2="${lx(d)}"/><text x="${lx(d)}" y="${H - B + 13}" text-anchor="middle">${d >= 1000 ? d / 1000 + " mm" : d + " µm"}</text>`;
+  s += `<path class="ln" d="M${xs.map((d, i) => `${lx(d).toFixed(1)} ${ly(pas[i]).toFixed(1)}`).join("L")}"/>`;
+  s += `<line class="ax" x1="${L}" x2="${L}" y1="${T}" y2="${H - B}"/><line class="ax" x1="${L}" x2="${W - Rr}" y1="${H - B}" y2="${H - B}"/>`;
+  return s + `</svg>`;
+}
+
+$("insp").addEventListener("change", onInspectorEdit);
+$("insp").addEventListener("input", (e) => { if (e.target.matches("textarea")) onInspectorEdit(e); });
+$("insp").addEventListener("click", (e) => {
+  if (e.target.id === "del") removeSelected();
+  if (e.target.id === "newfs") load({ name: "Untitled flowsheet", components: ["water"], minerals: [], package: "Peng-Robinson", units: [], streams: [] });
+});
+function onInspectorEdit(e) {
+  const t = e.target;
+  if (t.dataset.comp) { toggle(fs.components, t.dataset.comp, t.checked); return solveSoon(); }
+  if (t.dataset.min) { toggle(fs.minerals, t.dataset.min, t.checked); return solveSoon(); }
+  if (t.id === "uid") return renameUnit(sel.id, t.value.trim());
+  if (t.id === "sid") return renameStream(sel.id, t.value.trim());
+  if (t.dataset.param) {
+    const u = fs.units.find((x) => x.id === sel.id), p = SCHEMA[u.type].params.find((q) => q.name === t.dataset.param);
+    u.params[p.name] = p.kind === "number" ? (t.value.trim() === "" ? "" : parseFloat(t.value)) : t.value;
+    if (p.kind === "select") renderInspector();
+    return solveSoon(t.tagName === "TEXTAREA" ? 700 : 300);
+  }
+  const st = sel && fs.streams.find((x) => x.id === sel.id);
+  if (!st || !st.feed) return;
+  const v = parseFloat(t.value);
+  if (!Number.isFinite(v)) return;
+  if (t.dataset.feed === "T") st.feed.T = v + 273.15;
+  if (t.dataset.feed === "P") st.feed.P = v * 1e5;
+  if (t.dataset.flow) { st.feed.flows = st.feed.flows || {}; st.feed.flows[t.dataset.flow] = v; }
+  if (t.dataset.solid) {
+    st.feed.solids = st.feed.solids || {};
+    const s = (st.feed.solids[t.dataset.solid] = st.feed.solids[t.dataset.solid] || { mass: 0, p80: 10000 });
+    if (t.dataset.k === "mass") s.mass = v / 3.6; else s.p80 = v;
+  }
+  solveSoon();
+}
+function toggle(arr, v, on) { const i = arr.indexOf(v); if (on && i < 0) arr.push(v); if (!on && i >= 0) arr.splice(i, 1); }
+function renameUnit(old, nu) {
+  if (!nu || nu === old || fs.units.some((u) => u.id === nu)) return renderInspector();
+  fs.units.find((u) => u.id === old).id = nu;
+  fs.streams.forEach((s) => { if (s.from && s.from.unit === old) s.from.unit = nu; if (s.to && s.to.unit === old) s.to.unit = nu; });
+  sel.id = nu; drawSheet(); solveSoon();
+}
+function renameStream(old, nu) {
+  if (!nu || nu === old || fs.streams.some((s) => s.id === nu)) return renderInspector();
+  fs.streams.find((s) => s.id === old).id = nu; sel.id = nu; drawSheet(); solveSoon();
+}
+
+// ------------------------------------------------------------- results
+$("tabs").addEventListener("click", (e) => {
+  const b = e.target.closest("[data-tab]"); if (!b) return;
+  tab = b.dataset.tab;
+  document.querySelectorAll(".tab").forEach((x) => x.setAttribute("aria-selected", String(x === b)));
+  renderResults();
+});
+function renderResults() {
+  const p = $("pane");
+  if (tab === "json") return renderJson(p);
+  if (!results) { p.innerHTML = `<p class="hint">${fs && fs.units.length ? "Results appear here once the flowsheet solves." : "Load an example or place units to build a flowsheet."}</p>`; return; }
+  if (tab === "streams") return renderStreamTable(p);
+  if (tab === "units") {
+    p.innerHTML = `<div class="cards">${Object.entries(results.units).map(([id, u]) =>
+      `<div class="card"><h4>${esc(id)} <span>${esc(SCHEMA[u.type].label)}</span></h4><dl class="kv">${Object.entries(u.results).map(([k, v]) => `<dt>${esc(k)}</dt><dd>${fmt(v)}</dd>`).join("")}</dl></div>`).join("")}</div>`;
+    return;
+  }
+  const b = results.balances;
+  let h = `<div class="bal">
+    <div><b>${fmt(b.mass_in_kg_s)}</b><span>Mass in, kg/s</span></div>
+    <div><b>${fmt(b.mass_out_kg_s)}</b><span>Mass out, kg/s</span></div>
+    <div><b>${b.mass_closure_pct.toExponential(1)}</b><span>Mass closure, %</span></div>
+    <div><b>${fmt(b.heat_added_kW)}</b><span>Net heat added, kW</span></div>
+    <div><b>${fmt(b.energy_closure_kW, 2)}</b><span>Energy closure, kW</span></div></div>`;
+  h += `<h3>Calculation order</h3><p class="hint" style="font-family:var(--f-mono)">${results.order.map((o) => (typeof o === "string" ? esc(o) : `[loop ${o.loop.map(esc).join(" → ")} | tear ${o.tears.map(esc).join(", ")}]`)).join("  →  ")}</p>`;
+  if (results.loops.length) {
+    h += `<h3>Recycle convergence</h3><div class="cards">` + results.loops.map((l) => `<div class="card"><h4>${esc(l.tears.join(", "))} <span>${l.converged ? "converged" : "not converged"}</span></h4>
+      <p class="hint">${l.iterations} iterations, Wegstein acceleration. Units: ${l.units.map(esc).join(", ")}</p>${convChart(l.errors)}</div>`).join("") + `</div>`;
+  } else h += `<p class="hint">No recycle loops: units were solved once in sequence.</p>`;
+  p.innerHTML = h;
+}
+function convChart(errs) {
+  const W = 260, H = 110, L = 34, B = 18, T = 6, Rr = 6, lo = -8, hi = Math.max(1, Math.ceil(Math.log10(Math.max(...errs, 1e-12))));
+  const x = (i) => L + (errs.length > 1 ? i / (errs.length - 1) : 0) * (W - L - Rr), y = (e) => T + (hi - Math.max(lo, Math.log10(Math.max(e, 1e-12)))) / (hi - lo) * (H - T - B);
+  let s = `<svg class="chart" viewBox="0 0 ${W} ${H}" width="100%" role="img" aria-label="Tear error by iteration (log scale)">`;
+  for (let k = lo; k <= hi; k += 2) s += `<line class="gl" x1="${L}" x2="${W - Rr}" y1="${y(10 ** k)}" y2="${y(10 ** k)}"/><text x="${L - 4}" y="${y(10 ** k) + 3}" text-anchor="end">1e${k}</text>`;
+  s += `<path class="ln" style="stroke:var(--accent)" d="M${errs.map((e, i) => `${x(i).toFixed(1)} ${y(e).toFixed(1)}`).join("L")}"/>`;
+  s += `<text x="${W - Rr}" y="${H - 4}" text-anchor="end">iteration ${errs.length}</text>`;
+  return s + `</svg>`;
+}
+function renderStreamTable(p) {
+  const ids = fs.streams.map((s) => s.id).filter((id) => results.streams[id]);
+  const S = results.streams, cur = sel && sel.kind === "stream" ? sel.id : null;
+  const cell = (id, v) => `<td class="${id === cur ? "sel" : ""}">${v}</td>`;
+  const row = (label, f) => `<tr><td>${label}</td>${ids.map((id) => cell(id, f(S[id]))).join("")}</tr>`;
+  let h = `<div class="tablewrap"><table class="st"><thead><tr><th>Stream</th>${ids.map((id) => `<th class="${id === cur ? "sel" : ""}" data-sid="${esc(id)}">${esc(id)}</th>`).join("")}</tr></thead><tbody>`;
+  h += row("From", (s) => esc(s.source || "feed")) + row("To", (s) => esc(s.destination || "product"));
+  h += row("Temperature, °C", (s) => fmt(s.T_C)) + row("Pressure, bar", (s) => fmt(s.P_bar)) + row("Vapour fraction", (s) => fmt(s.vapour_fraction, 3));
+  h += row("Molar flow, mol/s", (s) => fmt(s.molar_flow_mol_s)) + row("Mass flow, kg/s", (s) => fmt(s.mass_flow_kg_s)) + row("Enthalpy, kW", (s) => fmt(s.enthalpy_kW));
+  h += `<tr class="grp"><td>Component flows, mol/s</td>${ids.map(() => "<td></td>").join("")}</tr>`;
+  for (const c of results.components) if (ids.some((id) => S[id].flows_mol_s[c] > 0)) h += row(esc(c), (s) => fmt(s.flows_mol_s[c]));
+  if (results.minerals.length) {
+    h += `<tr class="grp"><td>Solids, t/h</td>${ids.map(() => "<td></td>").join("")}</tr>`;
+    for (const m of results.minerals) h += row(esc(m), (s) => fmt(s.solids_kg_s[m] * 3.6));
+    h += row("Solids content, % w", (s) => fmt(s.solids_pct_w, 3)) + row("P80, µm", (s) => (s.P80_um ? fmt(s.P80_um, 3) : "–"));
+  }
+  p.innerHTML = h + `</tbody></table></div>`;
+}
+$("pane").addEventListener("click", (e) => {
+  const th = e.target.closest("[data-sid]"); if (th) return select({ kind: "stream", id: th.dataset.sid });
+  if (e.target.id === "copyspec" || e.target.id === "copyres") {
+    const ta = $(e.target.id === "copyspec" ? "specout" : "resout");
+    const done = () => { e.target.textContent = "Copied"; setTimeout(() => (e.target.textContent = e.target.id === "copyspec" ? "Copy flowsheet JSON" : "Copy results JSON"), 1500); };
+    navigator.clipboard.writeText(ta.textContent).then(done, () => { const r = document.createRange(); r.selectNodeContents(ta); getSelection().removeAllRanges(); getSelection().addRange(r); });
+  }
+  if (e.target.id === "doimport") {
+    try { load(JSON.parse($("importbox").value)); $("importmsg").textContent = "Loaded."; }
+    catch (err) { $("importmsg").textContent = "That is not valid flowsheet JSON: " + err.message; }
+  }
+});
+function renderJson(p) {
+  const spec = JSON.stringify(specForSolve(false), null, 1);
+  p.innerHTML = `<p class="hint">The same JSON runs in the Python engine: <code>python -m procsim run flowsheet.json</code></p>
+    <div class="row"><button class="btn small" id="copyspec">Copy flowsheet JSON</button>${results ? `<button class="btn small" id="copyres">Copy results JSON</button>` : ""}</div>
+    <pre class="json" id="specout">${esc(spec)}</pre>${results ? `<pre class="json" id="resout" hidden>${esc(JSON.stringify(results))}</pre>` : ""}
+    <h3 style="margin-top:14px">Import</h3><textarea class="import" id="importbox" placeholder="Paste flowsheet JSON here" spellcheck="false"></textarea>
+    <div class="row"><button class="btn small" id="doimport">Load pasted flowsheet</button><span class="hint" id="importmsg"></span></div>`;
+}
+
+// ------------------------------------------------------------- header
+$("solve").addEventListener("click", solveNow);
+$("auto").addEventListener("change", () => { if ($("auto").checked) solveNow(); });
+$("pkg").addEventListener("change", (e) => { fs.package = e.target.value; solveSoon(); });
+$("fsname").addEventListener("change", (e) => { fs.name = e.target.value; save(); });
+$("example").addEventListener("change", (e) => { const ex = EXAMPLES.find((x) => x.name === e.target.value); if (ex) load(ex); e.target.value = ""; });
+EXAMPLES.forEach((ex) => $("example").insertAdjacentHTML("beforeend", `<option>${esc(ex.name)}</option>`));
+
+function renderAll() {
+  $("fsname").value = fs.name || ""; $("pkg").value = fs.package || "Peng-Robinson";
+  drawSheet(); renderInspector(); renderResults();
+}
+renderPalette();
+let saved = null;
+try { saved = JSON.parse(localStorage.getItem("procsim.flowsheet.v2")); } catch (e) {}
+load(saved && saved.units ? saved : EXAMPLES[3]);
+</script>

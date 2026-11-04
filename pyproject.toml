@@ -1,0 +1,40 @@
+[build-system]
+requires = ["setuptools>=64"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "procsim"
+version = "0.3.0"
+description = "Steady-state process simulator for chemical, mineral and rare-earth processing flowsheets, with a browser editor"
+readme = "README.md"
+license = { file = "LICENSE" }
+authors = [{ name = "Anandarup Mukherjee" }]
+requires-python = ">=3.9"
+dependencies = ["numpy>=1.21"]
+keywords = ["process simulation", "flowsheet", "chemical engineering", "mineral processing",
+            "hydrometallurgy", "rare earths", "neodymium", "Peng-Robinson", "solvent extraction"]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Intended Audience :: Science/Research",
+    "Topic :: Scientific/Engineering :: Chemistry",
+]
+
+[project.optional-dependencies]
+test = ["pytest>=7"]
+
+[project.scripts]
+procsim = "procsim.__main__:main"
+
+[project.urls]
+Repository = "https://github.com/anandarupmukherjee/procsim"
+
+[tool.setuptools]
+packages = ["procsim"]
+
+[tool.setuptools.package-data]
+procsim = ["data/procsim.html", "data/examples/*.json"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

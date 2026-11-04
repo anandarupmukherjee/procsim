@@ -1,0 +1,199 @@
+{
+ "name": "Methanol synthesis loop",
+ "description": "Syngas reacts over a conversion reactor; crude methanol is condensed and unreacted gas recycled with a purge.",
+ "components": [
+  "carbon monoxide",
+  "carbon dioxide",
+  "hydrogen",
+  "methane",
+  "nitrogen",
+  "methanol",
+  "water"
+ ],
+ "package": "Peng-Robinson",
+ "units": [
+  {
+   "id": "MIX",
+   "type": "Mixer",
+   "x": 160,
+   "y": 200,
+   "params": {}
+  },
+  {
+   "id": "PRE",
+   "type": "Heater",
+   "x": 320,
+   "y": 200,
+   "params": {
+    "mode": "temperature",
+    "T_out": 230.0,
+    "dP": 0.0
+   }
+  },
+  {
+   "id": "R-1",
+   "type": "ConversionReactor",
+   "x": 480,
+   "y": 200,
+   "params": {
+    "reactions": "CO + 2 H2 -> CH3OH : CO : 0.35\nCO2 + 3 H2 -> CH3OH + H2O : CO2 : 0.20",
+    "mode": "isothermal",
+    "dP": 1.0
+   }
+  },
+  {
+   "id": "COOL",
+   "type": "Heater",
+   "x": 640,
+   "y": 200,
+   "params": {
+    "mode": "temperature",
+    "T_out": 40.0,
+    "dP": 0.0
+   }
+  },
+  {
+   "id": "SEP",
+   "type": "Flash",
+   "x": 800,
+   "y": 200,
+   "params": {
+    "mode": "T and P",
+    "T": 40.0,
+    "P": 79.0
+   }
+  },
+  {
+   "id": "PURGE",
+   "type": "Splitter",
+   "x": 800,
+   "y": 60,
+   "params": {
+    "frac1": 0.04
+   }
+  },
+  {
+   "id": "RECY",
+   "type": "Valve",
+   "x": 480,
+   "y": 60,
+   "params": {
+    "P_out": 80.0
+   }
+  }
+ ],
+ "streams": [
+  {
+   "id": "Syngas",
+   "from": null,
+   "to": {
+    "unit": "MIX",
+    "port": "in"
+   },
+   "feed": {
+    "T": 313.15,
+    "P": 8000000.0,
+    "flows": {
+     "carbon monoxide": 30.0,
+     "carbon dioxide": 5.0,
+     "hydrogen": 74.0,
+     "methane": 1.0,
+     "nitrogen": 0.5
+    }
+   }
+  },
+  {
+   "id": "Loop feed",
+   "from": {
+    "unit": "MIX",
+    "port": "out"
+   },
+   "to": {
+    "unit": "PRE",
+    "port": "in"
+   }
+  },
+  {
+   "id": "Reactor in",
+   "from": {
+    "unit": "PRE",
+    "port": "out"
+   },
+   "to": {
+    "unit": "R-1",
+    "port": "in"
+   }
+  },
+  {
+   "id": "Reactor out",
+   "from": {
+    "unit": "R-1",
+    "port": "out"
+   },
+   "to": {
+    "unit": "COOL",
+    "port": "in"
+   }
+  },
+  {
+   "id": "Cooled",
+   "from": {
+    "unit": "COOL",
+    "port": "out"
+   },
+   "to": {
+    "unit": "SEP",
+    "port": "in"
+   }
+  },
+  {
+   "id": "Crude methanol",
+   "from": {
+    "unit": "SEP",
+    "port": "liquid"
+   },
+   "to": null
+  },
+  {
+   "id": "Loop gas",
+   "from": {
+    "unit": "SEP",
+    "port": "vapour"
+   },
+   "to": {
+    "unit": "PURGE",
+    "port": "in"
+   }
+  },
+  {
+   "id": "Purge",
+   "from": {
+    "unit": "PURGE",
+    "port": "out1"
+   },
+   "to": null
+  },
+  {
+   "id": "Recycle",
+   "from": {
+    "unit": "PURGE",
+    "port": "out2"
+   },
+   "to": {
+    "unit": "RECY",
+    "port": "in"
+   }
+  },
+  {
+   "id": "Recycle 2",
+   "from": {
+    "unit": "RECY",
+    "port": "out"
+   },
+   "to": {
+    "unit": "MIX",
+    "port": "in"
+   }
+  }
+ ]
+}

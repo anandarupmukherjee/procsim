@@ -1,0 +1,614 @@
+{
+ "name": "Neodymium: Eneabba-type monazite-xenotime concentrate to Nd metal",
+ "description": "Mineral-sands rare earth concentrate at 57 % REO fed straight to the refinery at 32 kt per year (Iluka's worked example), through the same cracking, purification, SX and finishing steps.",
+ "sources": {
+  "Feed rate, grade, refinery recovery check": "Iluka Eneabba refinery presentation 2024, p25: 32 kt concentrate at ~57 % REO, 90 % simplified weighted average recovery",
+  "RE distribution": "Iluka Eneabba refinery presentation 2024, p25 (La, Ce, Pr, Nd, Tb, Dy) and p27 (Sm, Gd, Y)",
+  "SX order": "Iluka Eneabba refinery presentation 2024, p25: SX1 light/heavy, SX2 LaCe/NdPr, SX3 and SX5 Pr/Nd",
+  "Gangue, Th, SX factors": "ASSUMED"
+ },
+ "components": [
+  "water",
+  "oxygen",
+  "reagent"
+ ],
+ "minerals": [
+  "monazite-xenotime",
+  "hematite",
+  "quartz",
+  "ThO2",
+  "La2(CO3)3",
+  "Ce2(CO3)3",
+  "Pr2(CO3)3",
+  "Nd2(CO3)3",
+  "Sm2(CO3)3",
+  "CeO2",
+  "Pr6O11",
+  "Nd2O3",
+  "Sm2O3",
+  "Nd metal",
+  "calcite"
+ ],
+ "package": "Ideal",
+ "units": [
+  {
+   "id": "LX-100",
+   "type": "LeachTank",
+   "x": 200,
+   "y": 160,
+   "params": {
+    "T": 95.0,
+    "tau": 480.0,
+    "extraction": "monazite-xenotime: 0.95\nhematite: 0.3"
+   }
+  },
+  {
+   "id": "FT-100",
+   "type": "Thickener",
+   "x": 440,
+   "y": 170,
+   "params": {
+    "solids_rec": 0.998,
+    "uf_solids": 80.0
+   }
+  },
+  {
+   "id": "PR-100",
+   "type": "Precipitator",
+   "x": 740,
+   "y": 150,
+   "params": {
+    "T": 60.0,
+    "moisture": 40.0,
+    "p80": 15.0,
+    "reactions": "Th4+ -> ThO2 : 0.995\nFe2+ -> hematite : 0.99"
+   }
+  },
+  {
+   "id": "PR-200",
+   "type": "Precipitator",
+   "x": 1040,
+   "y": 150,
+   "params": {
+    "T": 60.0,
+    "moisture": 30.0,
+    "p80": 25.0,
+    "reactions": "La3+ -> La2(CO3)3 : 0.995\nCe3+ -> Ce2(CO3)3 : 0.995\nPr3+ -> Pr2(CO3)3 : 0.995\nNd3+ -> Nd2(CO3)3 : 0.995\nSm+HREE3+ -> Sm2(CO3)3 : 0.995\nCa2+ -> calcite : 0.15"
+   }
+  },
+  {
+   "id": "LX-200",
+   "type": "LeachTank",
+   "x": 1340,
+   "y": 150,
+   "params": {
+    "T": 60.0,
+    "tau": 60.0,
+    "extraction": "La2(CO3)3: 1\nCe2(CO3)3: 1\nPr2(CO3)3: 1\nNd2(CO3)3: 1\nSm2(CO3)3: 1\ncalcite: 1"
+   }
+  },
+  {
+   "id": "SX-1",
+   "type": "SXCascade",
+   "x": 220,
+   "y": 440,
+   "params": {
+    "key": "Nd3+",
+    "strip_water": 0.1,
+    "D_key": 0.8,
+    "N_ext": 12,
+    "N_scrub": 12,
+    "OA": 0.3,
+    "SA": 0.3
+   }
+  },
+  {
+   "id": "SX-2",
+   "type": "SXCascade",
+   "x": 590,
+   "y": 440,
+   "params": {
+    "key": "Pr3+",
+    "strip_water": 0.3,
+    "D_key": 2.8,
+    "N_ext": 30,
+    "N_scrub": 30,
+    "OA": 1.2,
+    "SA": 1.9
+   }
+  },
+  {
+   "id": "SX-3",
+   "type": "SXCascade",
+   "x": 960,
+   "y": 440,
+   "params": {
+    "key": "Nd3+",
+    "strip_water": 0.8,
+    "D_key": 2.9,
+    "N_ext": 70,
+    "N_scrub": 70,
+    "OA": 1.4,
+    "SA": 2.9
+   }
+  },
+  {
+   "id": "PR-300",
+   "type": "Precipitator",
+   "x": 1300,
+   "y": 430,
+   "params": {
+    "T": 60.0,
+    "moisture": 20.0,
+    "p80": 10.0,
+    "reactions": "Nd3+ -> Nd2O3 : 0.995\nPr3+ -> Pr6O11 : 0.995\nSm+HREE3+ -> Sm2O3 : 0.995"
+   }
+  },
+  {
+   "id": "CAL-100",
+   "type": "Flash",
+   "x": 1540,
+   "y": 410,
+   "params": {
+    "mode": "T and P",
+    "T": 900.0,
+    "P": 1.01325
+   }
+  },
+  {
+   "id": "EC-100",
+   "type": "Electrolysis",
+   "x": 1760,
+   "y": 430,
+   "params": {
+    "T": 1050.0,
+    "energy": 10.0,
+    "current_eff": 0.75,
+    "reactions": "Nd2O3 -> Nd metal : 0.98"
+   }
+  },
+  {
+   "id": "PR-400",
+   "type": "Precipitator",
+   "x": 1180,
+   "y": 720,
+   "params": {
+    "T": 60.0,
+    "moisture": 20.0,
+    "p80": 10.0,
+    "reactions": "Pr3+ -> Pr6O11 : 0.995\nNd3+ -> Nd2O3 : 0.995\nCe3+ -> CeO2 : 0.995"
+   }
+  },
+  {
+   "id": "PR-500",
+   "type": "Precipitator",
+   "x": 420,
+   "y": 720,
+   "params": {
+    "T": 60.0,
+    "moisture": 20.0,
+    "p80": 10.0,
+    "reactions": "Sm+HREE3+ -> Sm2O3 : 0.995\nNd3+ -> Nd2O3 : 0.995\nPr3+ -> Pr6O11 : 0.995"
+   }
+  },
+  {
+   "id": "PR-600",
+   "type": "Precipitator",
+   "x": 800,
+   "y": 720,
+   "params": {
+    "T": 60.0,
+    "moisture": 30.0,
+    "p80": 25.0,
+    "reactions": "La3+ -> La2(CO3)3 : 0.995\nCe3+ -> Ce2(CO3)3 : 0.995\nPr3+ -> Pr2(CO3)3 : 0.995"
+   }
+  }
+ ],
+ "streams": [
+  {
+   "id": "Monazite-xenotime concentrate",
+   "from": null,
+   "to": {
+    "unit": "LX-100",
+    "port": "in"
+   },
+   "feed": {
+    "T": 293.15,
+    "P": 101325.0,
+    "flows": {
+     "water": 21.586949147315508
+    },
+    "solids": {
+     "monazite-xenotime": {
+      "mass": 0.9622222222222222,
+      "p80": 150.0,
+      "spread": 1.2
+     },
+     "hematite": {
+      "mass": 0.05555555555555556,
+      "p80": 150.0,
+      "spread": 1.2
+     },
+     "quartz": {
+      "mass": 0.09333333333333334,
+      "p80": 150.0,
+      "spread": 1.2
+     }
+    }
+   }
+  },
+  {
+   "id": "Acid and dilution water",
+   "from": null,
+   "to": {
+    "unit": "LX-100",
+    "port": "in"
+   },
+   "feed": {
+    "T": 293.15,
+    "P": 101325.0,
+    "flows": {
+     "water": 120.0
+    }
+   }
+  },
+  {
+   "id": "Leach slurry",
+   "from": {
+    "unit": "LX-100",
+    "port": "out"
+   },
+   "to": {
+    "unit": "FT-100",
+    "port": "in"
+   }
+  },
+  {
+   "id": "Leach residue",
+   "from": {
+    "unit": "FT-100",
+    "port": "underflow"
+   },
+   "to": null
+  },
+  {
+   "id": "Pregnant leach solution",
+   "from": {
+    "unit": "FT-100",
+    "port": "overflow"
+   },
+   "to": {
+    "unit": "PR-100",
+    "port": "in"
+   }
+  },
+  {
+   "id": "Neutraliser",
+   "from": null,
+   "to": {
+    "unit": "PR-100",
+    "port": "in"
+   },
+   "feed": {
+    "T": 293.15,
+    "P": 101325.0,
+    "flows": {
+     "water": 20.0,
+     "reagent": 0.23
+    }
+   }
+  },
+  {
+   "id": "Th residue",
+   "from": {
+    "unit": "PR-100",
+    "port": "solids"
+   },
+   "to": null
+  },
+  {
+   "id": "Purified liquor",
+   "from": {
+    "unit": "PR-100",
+    "port": "liquor"
+   },
+   "to": {
+    "unit": "PR-200",
+    "port": "in"
+   }
+  },
+  {
+   "id": "Carbonate precipitant",
+   "from": null,
+   "to": {
+    "unit": "PR-200",
+    "port": "in"
+   },
+   "feed": {
+    "T": 293.15,
+    "P": 101325.0,
+    "flows": {
+     "water": 600.0,
+     "reagent": 5.93
+    }
+   }
+  },
+  {
+   "id": "MREC",
+   "from": {
+    "unit": "PR-200",
+    "port": "solids"
+   },
+   "to": {
+    "unit": "LX-200",
+    "port": "in"
+   }
+  },
+  {
+   "id": "Barren liquor",
+   "from": {
+    "unit": "PR-200",
+    "port": "liquor"
+   },
+   "to": null
+  },
+  {
+   "id": "HCl redissolution",
+   "from": null,
+   "to": {
+    "unit": "LX-200",
+    "port": "in"
+   },
+   "feed": {
+    "T": 293.15,
+    "P": 101325.0,
+    "flows": {
+     "water": 110.0
+    }
+   }
+  },
+  {
+   "id": "RE chloride feed",
+   "from": {
+    "unit": "LX-200",
+    "port": "out"
+   },
+   "to": {
+    "unit": "SX-1",
+    "port": "in"
+   }
+  },
+  {
+   "id": "SEG strip liquor",
+   "from": {
+    "unit": "SX-1",
+    "port": "extract"
+   },
+   "to": {
+    "unit": "PR-500",
+    "port": "in"
+   }
+  },
+  {
+   "id": "La-Nd raffinate",
+   "from": {
+    "unit": "SX-1",
+    "port": "raffinate"
+   },
+   "to": {
+    "unit": "SX-2",
+    "port": "in"
+   }
+  },
+  {
+   "id": "PrNd strip liquor",
+   "from": {
+    "unit": "SX-2",
+    "port": "extract"
+   },
+   "to": {
+    "unit": "SX-3",
+    "port": "in"
+   }
+  },
+  {
+   "id": "LaCe raffinate",
+   "from": {
+    "unit": "SX-2",
+    "port": "raffinate"
+   },
+   "to": {
+    "unit": "PR-600",
+    "port": "in"
+   }
+  },
+  {
+   "id": "Nd strip liquor",
+   "from": {
+    "unit": "SX-3",
+    "port": "extract"
+   },
+   "to": {
+    "unit": "PR-300",
+    "port": "in"
+   }
+  },
+  {
+   "id": "Pr raffinate",
+   "from": {
+    "unit": "SX-3",
+    "port": "raffinate"
+   },
+   "to": {
+    "unit": "PR-400",
+    "port": "in"
+   }
+  },
+  {
+   "id": "Oxalic acid (Nd)",
+   "from": null,
+   "to": {
+    "unit": "PR-300",
+    "port": "in"
+   },
+   "feed": {
+    "T": 293.15,
+    "P": 101325.0,
+    "flows": {
+     "water": 30.0,
+     "reagent": 0.26
+    }
+   }
+  },
+  {
+   "id": "Nd oxalate cake",
+   "from": {
+    "unit": "PR-300",
+    "port": "solids"
+   },
+   "to": {
+    "unit": "CAL-100",
+    "port": "in"
+   }
+  },
+  {
+   "id": "Nd barren liquor",
+   "from": {
+    "unit": "PR-300",
+    "port": "liquor"
+   },
+   "to": null
+  },
+  {
+   "id": "Calciner offgas",
+   "from": {
+    "unit": "CAL-100",
+    "port": "vapour"
+   },
+   "to": null
+  },
+  {
+   "id": "Nd oxide",
+   "from": {
+    "unit": "CAL-100",
+    "port": "liquid"
+   },
+   "to": {
+    "unit": "EC-100",
+    "port": "in"
+   }
+  },
+  {
+   "id": "Nd metal",
+   "from": {
+    "unit": "EC-100",
+    "port": "metal"
+   },
+   "to": null
+  },
+  {
+   "id": "Anode gas",
+   "from": {
+    "unit": "EC-100",
+    "port": "offgas"
+   },
+   "to": null
+  },
+  {
+   "id": "Oxalic acid (Pr)",
+   "from": null,
+   "to": {
+    "unit": "PR-400",
+    "port": "in"
+   },
+   "feed": {
+    "T": 293.15,
+    "P": 101325.0,
+    "flows": {
+     "water": 20.0,
+     "reagent": 0.09
+    }
+   }
+  },
+  {
+   "id": "Pr oxide cake",
+   "from": {
+    "unit": "PR-400",
+    "port": "solids"
+   },
+   "to": null
+  },
+  {
+   "id": "Pr barren liquor",
+   "from": {
+    "unit": "PR-400",
+    "port": "liquor"
+   },
+   "to": null
+  },
+  {
+   "id": "Oxalic acid (SEG)",
+   "from": null,
+   "to": {
+    "unit": "PR-500",
+    "port": "in"
+   },
+   "feed": {
+    "T": 293.15,
+    "P": 101325.0,
+    "flows": {
+     "water": 10.0,
+     "reagent": 0.21
+    }
+   }
+  },
+  {
+   "id": "SEG oxide cake",
+   "from": {
+    "unit": "PR-500",
+    "port": "solids"
+   },
+   "to": null
+  },
+  {
+   "id": "SEG barren liquor",
+   "from": {
+    "unit": "PR-500",
+    "port": "liquor"
+   },
+   "to": null
+  },
+  {
+   "id": "Carbonate precipitant (LaCe)",
+   "from": null,
+   "to": {
+    "unit": "PR-600",
+    "port": "in"
+   },
+   "feed": {
+    "T": 293.15,
+    "P": 101325.0,
+    "flows": {
+     "water": 300.0,
+     "reagent": 3.86
+    }
+   }
+  },
+  {
+   "id": "LaCe carbonate",
+   "from": {
+    "unit": "PR-600",
+    "port": "solids"
+   },
+   "to": null
+  },
+  {
+   "id": "LaCe barren liquor",
+   "from": {
+    "unit": "PR-600",
+    "port": "liquor"
+   },
+   "to": null
+  }
+ ]
+}
