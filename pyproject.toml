@@ -9,7 +9,7 @@ description = "Steady-state process simulator for chemical, mineral and rare-ear
 readme = "README.md"
 license = { file = "LICENSE" }
 authors = [{ name = "Anandarup Mukherjee" }]
-requires-python = ">=3.9"
+requires-python = ">=3.10"
 dependencies = ["numpy>=1.21"]
 keywords = ["process simulation", "flowsheet", "chemical engineering", "mineral processing",
             "hydrometallurgy", "rare earths", "neodymium", "Peng-Robinson", "solvent extraction"]

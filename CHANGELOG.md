@@ -5,7 +5,7 @@
 - Packaged as an installable tool with a `procsim` command: `run`, `examples`, `units`, `editor`, `routes`.
 - Example flowsheets and the browser editor ship inside the package (`procsim/data`).
 - Neodymium route builder moved into the package as `procsim.ree`, with `report()` and `compare()`.
-- CI on GitHub Actions: pytest on Python 3.9 to 3.12, JavaScript parity, editor bundle check.
+- CI on GitHub Actions: pytest on Python 3.10 to 3.13, JavaScript parity, editor bundle check.
 
 ## 0.2.0 (2026-10-09)
 

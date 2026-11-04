@@ -13,7 +13,7 @@ One JSON flowsheet format runs in two engines:
 pip install git+https://github.com/anandarupmukherjee/procsim.git
 ```
 
-Python 3.9 or later. The only dependency is numpy.
+Python 3.10 or later. The only dependency is numpy.
 
 ## Command line
 
